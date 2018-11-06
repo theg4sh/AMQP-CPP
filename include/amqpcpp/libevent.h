@@ -139,7 +139,7 @@ private:
      */
     std::map<int,std::unique_ptr<Watcher>> _watchers;
 
-
+protected:
     /**
      *  Method that is called by AMQP-CPP to register a filedescriptor for readability or writability
      *  @param  connection  The TCP connection object that is reporting
