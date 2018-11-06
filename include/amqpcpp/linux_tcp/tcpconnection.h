@@ -203,9 +203,9 @@ public:
      *  Send a heartbeat
      *  @return bool
      */
-    bool heartbeat()
+    bool heartbeat(bool force = false)
     {
-        return _connection.heartbeat();
+        return _connection.heartbeat(force);
     }
 };
 
