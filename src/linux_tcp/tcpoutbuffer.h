@@ -16,6 +16,8 @@
 /**
  *  Dependencies
  */
+#include <deque>
+#include <mutex>
 #include <sys/ioctl.h>
 #include <sys/uio.h>
 #include "openssl.h"
@@ -43,6 +45,7 @@ private:
      *  @var std::deque
      */
     mutable std::deque<std::vector<char>> _buffers;
+    mutable std::mutex syncLock;
 
     /**
      *  Number of bytes in first buffer that is no longer in use
@@ -92,6 +95,8 @@ public:
         if (this == &that) return *this;
         
         // swap buffers
+        std::lock_guard<std::mutex> lockL(this->syncLock);
+        std::lock_guard<std::mutex> lockR(that.syncLock);
         _buffers.swap(that._buffers);
         
         // swap integers
@@ -139,6 +144,7 @@ public:
      */
     void add(const char *buffer, size_t size)
     {
+        std::lock_guard<std::mutex> lock(this->syncLock);
         // add element
         _buffers.emplace_back(buffer, buffer + size);
     
@@ -155,6 +161,7 @@ public:
         // are we removing everything?
         if (toremove >= _size)
         {
+            std::lock_guard<std::mutex> lock(this->syncLock);
             // reset all
             _buffers.clear(); 
             _skip = _size = 0;
@@ -164,6 +171,7 @@ public:
             // keep looping
             while (toremove > 0)
             {
+                std::lock_guard<std::mutex> lock(this->syncLock);
                 // access to the first buffer
                 const auto &first = _buffers.front();
                 
@@ -208,6 +216,7 @@ public:
         size_t index = 0;
 
         // iterate over the buffers
+        std::lock_guard<std::mutex> lock(this->syncLock);
         for (const auto &str : _buffers)
         {
             // fill buffer
